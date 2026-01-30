@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 import numpy as np
 import cv2
 from deface.anonymize import anonymize, anonymizeImage
+from deface.common.config import APP_ROOT_PATH
 
 
 class FilterType(str, Enum):
@@ -18,7 +19,7 @@ class PasteType(str, Enum):
     feathered = "feathered"
     hard = "hard"
 
-app = FastAPI()
+app = FastAPI(root_path=APP_ROOT_PATH)
 
 
 @app.post("/deface-filename")

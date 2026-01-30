@@ -1,0 +1,18 @@
+# Ignore Python cache files
+**/__pycache__/
+**/*.py[cod]
+
+# Ignore local virtualenv
+.venv/
+venv/
+
+# Ignore egg-info and build artifacts
+*.egg-info/
+build/
+dist/
+
+# Ignore results and uploads/test samples (large data)
+results/
+upload/
+
+# Dockerfile and other configs remain; keep app source

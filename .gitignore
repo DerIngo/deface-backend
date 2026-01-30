@@ -1,0 +1,12 @@
+.venv
+.env
+.vscode
+
+__pycache__
+__init__.py
+deface.egg-info
+
+data/result/*
+data/upload/*
+
+

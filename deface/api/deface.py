@@ -1,11 +1,12 @@
 from enum import Enum
 import io
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import numpy as np
 import cv2
 from deface.anonymize import anonymize, anonymizeImage
-from deface.common.config import APP_ROOT_PATH
+from deface.common.config import APP_ROOT_PATH, CORS_CONFIG
 
 
 class FilterType(str, Enum):
@@ -20,6 +21,15 @@ class PasteType(str, Enum):
     hard = "hard"
 
 app = FastAPI(root_path=APP_ROOT_PATH)
+
+if CORS_CONFIG["allow_origins"]:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_CONFIG["allow_origins"],
+        allow_methods=CORS_CONFIG["allow_methods"],
+        allow_headers=CORS_CONFIG["allow_headers"],
+        allow_credentials=CORS_CONFIG["allow_credentials"],
+    )
 
 
 @app.post("/deface-filename")

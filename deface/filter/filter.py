@@ -3,12 +3,31 @@ import numpy as np
 
 
 def filter_blur(roi):
-  return cv2.medianBlur(roi, 81)
+  h, w = roi.shape[:2]
+  # Adaptive Kernel-Größe basierend auf ROI-Größe
+  # Bei kleinen ROIs: kleinerer Kernel
+  kernel_size = max(3, min(81, int((h + w) / 4)))
+  if kernel_size % 2 == 0:
+    kernel_size += 1
+  return cv2.medianBlur(roi, kernel_size)
 
-def filter_pixelate(roi, pixel_size=10):
+def filter_pixelate(roi, pixel_size=None):
     """Verpixelt einen gegebenen Bildausschnitt (ROI) und gibt ihn zurück."""
     # Erhalte Höhe und Breite des ROI
     h, w = roi.shape[:2]
+    
+    # Adaptive Pixel-Größe basierend auf ROI-Größe
+    if pixel_size is None:
+        # Bei kleinen ROIs: Pixel_size = 2-3, bei großen: 10-15
+        avg_size = (h + w) / 2
+        if avg_size < 50:
+            pixel_size = 2
+        elif avg_size < 100:
+            pixel_size = 3
+        elif avg_size < 200:
+            pixel_size = 5
+        else:
+            pixel_size = 10
 
     # Sicherstellen, dass die verkleinerte Größe mindestens 1x1 Pixel ist
     small_width = max(1, w // pixel_size)
@@ -26,13 +45,25 @@ def filter_pixelate(roi, pixel_size=10):
 
 
 
-def filter_line_mosaic(roi, cell_size=15, edge_intensity=0.7):
+def filter_line_mosaic(roi, cell_size=None, edge_intensity=0.7):
     """
     Erzeugt einen linienbasierten Mosaikeffekt.
     - cell_size: Größe der Mosaikzellen (je kleiner, feinere Linien)
     - edge_intensity: Stärke der Kantenhervorhebung (0.0-1.0)
     """
     h, w = roi.shape[:2]
+    
+    # Adaptive cell_size basierend auf ROI-Größe
+    if cell_size is None:
+        avg_size = (h + w) / 2
+        if avg_size < 50:
+            cell_size = 5
+        elif avg_size < 100:
+            cell_size = 8
+        elif avg_size < 200:
+            cell_size = 12
+        else:
+            cell_size = 15
 
     # 1. Zuerst normal verpixeln (Grundlage)
     # Sicherstellen, dass die Zellgröße nicht zu groß ist
@@ -76,12 +107,25 @@ def filter_line_mosaic(roi, cell_size=15, edge_intensity=0.7):
     return result
 
 
-def filter_facet_effect(roi, k=8):
+def filter_facet_effect(roi, k=None):
     """
     Erzeugt einen facettierten Effekt durch Farbquantisierung
     und Konturhervorhebung.
     - k: Anzahl der Farben (weniger = stärkere Facetten)
     """
+    # Adaptive k basierend auf ROI-Größe
+    if k is None:
+        h, w = roi.shape[:2]
+        area = h * w
+        if area < 1000:
+            k = 4  # Weniger Farben für stärkere Facetten bei kleinen ROIs
+        elif area < 5000:
+            k = 6
+        elif area < 20000:
+            k = 8
+        else:
+            k = 12  # Mehr Farben für feinere Details bei großen ROIs
+    
     # 1. Farben reduzieren (Quantisierung)
     data = roi.reshape((-1, 3)).astype(np.float32)
 
@@ -111,10 +155,10 @@ def filter_facet_effect(roi, k=8):
     return result
 
 def filter_verwischung_1(roi,
-                         k=65,
-                         band_factor=10,
-                         post_sigma_x=1.2,
-                         post_sigma_y=0.6):
+                         k=None,
+                         band_factor=None,
+                         post_sigma_x=None,
+                         post_sigma_y=None):
     """
     Verwischung_1: starker horizontaler Wisch (Motion/Box blur entlang X)
     + optionales Banding (runterskalieren in Y + nearest hoch)
@@ -125,6 +169,31 @@ def filter_verwischung_1(roi,
         return roi
 
     h, w = roi.shape[:2]
+    
+    # Adaptive Parameter basierend auf ROI-Größe
+    if k is None:
+        if w < 50:
+            k = 7
+        elif w < 100:
+            k = 15
+        elif w < 200:
+            k = 35
+        else:
+            k = 65
+    
+    if band_factor is None:
+        if h < 50:
+            band_factor = 3
+        elif h < 100:
+            band_factor = 5
+        else:
+            band_factor = 10
+    
+    if post_sigma_x is None:
+        post_sigma_x = 1.2
+    
+    if post_sigma_y is None:
+        post_sigma_y = 0.6
 
     # --- A) Horizontaler Motion/Box-Blur
     # Kernel: 1 x k

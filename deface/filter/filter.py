@@ -142,7 +142,20 @@ def filter_facet_effect(roi, k=None):
 
     # Leichte Weichzeichnung für glattere Konturen
     blurred = cv2.medianBlur(gray, 5)
-None,
+
+    # Adaptive Schwelle für Konturen
+    edges = cv2.adaptiveThreshold(blurred, 255,
+                                  cv2.ADAPTIVE_THRESH_MEAN_C,
+                                  cv2.THRESH_BINARY_INV, 11, 2)
+
+    # 3. Konturen auf das quantisierte Bild zeichnen
+    result = quantized.copy()
+    result[edges > 0] = [0, 0, 0]  # Schwarze Konturen
+
+    return result
+
+def filter_verwischung_1(roi,
+                         k=None,
                          band_factor=None,
                          post_sigma_x=None,
                          post_sigma_y=None):
@@ -180,20 +193,7 @@ None,
         post_sigma_x = 1.2
     
     if post_sigma_y is None:
-        post_sigma_y = 0.6 k=65,
-                         band_factor=10,
-                         post_sigma_x=1.2,
-                         post_sigma_y=0.6):
-    """
-    Verwischung_1: starker horizontaler Wisch (Motion/Box blur entlang X)
-    + optionales Banding (runterskalieren in Y + nearest hoch)
-    + leichtes Nachglätten.
-    """
-
-    if roi is None or roi.size == 0:
-        return roi
-
-    h, w = roi.shape[:2]
+        post_sigma_y = 0.6
 
     # --- A) Horizontaler Motion/Box-Blur
     # Kernel: 1 x k

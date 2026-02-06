@@ -32,8 +32,14 @@ docker build -t deface-backend .
 Run container:
 ```bash
 docker run -d \
+ --name deface-backend \
  -p 8000:8000 \
  deface-backend
+```
+
+Watch logs:
+```bash
+docker logs --follow deface-backend
 ```
 
 Work/Test in container:
